@@ -11,7 +11,7 @@ export default function App(){
     setLoading(true);
     setRes(null);
     try{
-      const r = await fetch("/api/predict", {
+      const r = await fetch("/predict", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({role, level})
