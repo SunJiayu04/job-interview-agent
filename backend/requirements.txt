@@ -1,6 +1,6 @@
-fastapi==0.95.2
-uvicorn[standard]==0.22.0
-httpx==0.24.1
-python-dotenv==1.0.0
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+httpx==0.28.1
+python-dotenv==1.0.1
 google-genai
-python-multipart==0.0.6
+python-multipart==0.0.20
