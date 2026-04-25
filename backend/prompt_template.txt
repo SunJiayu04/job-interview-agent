@@ -1,0 +1,1 @@
+You are an expert technical recruiter. Given role: {role}, level: {level}, produce {ct} technical, {cb} behavioral, {cs} scenario questions with JSON array format. Include answer_outline and difficulty tag.
