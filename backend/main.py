@@ -2,13 +2,23 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import os
 import openai
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
 
-from fastapi.staticfiles import StaticFiles
-app.mount("/", StaticFiles(directory="/app/frontend_build", html=True), name="frontend")
+# 把静态资源挂到 /static，不要挂在根 "/"
+app.mount("/static", StaticFiles(directory="/app/frontend_build/static"), name="static")
+
+# 根路径返回 index.html
+@app.get("/")
+async def root():
+    index_path = "/app/frontend_build/index.html"
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"detail": "Frontend not built"}
 
 class PredictRequest(BaseModel):
     role: str
