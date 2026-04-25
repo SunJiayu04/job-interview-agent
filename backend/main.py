@@ -28,12 +28,39 @@ class PredictRequest(BaseModel):
     count_tech: int = 2
     count_behavior: int = 2
     count_scenario: int = 4
+    job_description: str = ""
+    my_experience: str = ""
 
-def build_prompt(role, level, ct, cb, cs):
+def build_prompt(role, level, ct, cb, cs, job_description, my_experience):
     return f"""
-You are an expert recruiter. Given the role: "{role}", level: "{level}", generate {ct} technical interview questions, {cb} behavioral questions, and {cs} scenario-based questions.
-Output JSON array of objects: {{ "id": int, "type": "technical|behavior|scenario", "question": "...", "difficulty": "easy|medium|hard", "answer_outline": "..." }}.
-No extraneous text.
+You are an expert recruiter and interview coach. Given the inputs below, produce a practical, structured interview preparation package tailored to the Job Description (JD) and the candidate's supplied experience.
+
+Inputs:
+- Role: {role}
+- Level: {level}
+- Job Description:
+{job_description}
+
+- Candidate experience summary:
+{my_experience}
+
+Task:
+1) Produce a "Role Competency Map": list 6-10 key competencies/skills required by the JD. For each competency include (a) short description, (b) evidence to look for in answers or resume, and (c) suggested difficulty/importance (High/Medium/Low).
+
+2) Produce "Likely Interview Questions": grouped by Technical / Behavioral / Scenario. For each question include:
+   - the question text
+   - difficulty tag (easy/medium/hard)
+   - 1-line scoring rubric / what a strong answer demonstrates
+
+3) Produce "Best Matching Experience" from the candidate input: highlight 3-5 bullet points that rephrase the candidate's experience to emphasize fit with the JD (make them concise resume-style bullets).
+
+4) Provide "STAR Answer Outline" for 2-3 top behavioral/scenario questions: for each, provide structured bullet points following STAR (Situation, Task, Action, Result) that the candidate can use to craft answers.
+
+5) Provide "Follow-up Questions and Risk Points": list follow-up probes the interviewer should ask and any risk/gap items to watch for (e.g., missing tool experience, short tenures, lack of scale experience).
+
+Format:
+- Be concise, practical, and specific to the JD and candidate experience.
+- Return the package as plain text with clear labeled sections (1..5). Do NOT include meta commentary or explanation about your instructions.
 """
 
 @app.post("/predict")
@@ -53,15 +80,28 @@ async def predict(req: PredictRequest, request: Request):
             req.level,
             req.count_tech,
             req.count_behavior,
-            req.count_scenario
+            req.count_scenario,
+            req.job_description,
+            req.my_experience
         )
 
+        # Call Gemini (using your existing genai client)
+        # Adjust model name if needed per your account
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt
         )
 
-        text = response.text
+        # The genai response object shape may vary; use .text if available
+        text = None
+        try:
+            text = response.text
+        except Exception:
+            try:
+                # fallback: inspect choices or content field
+                text = getattr(response, "output", None) or str(response)
+            except Exception:
+                text = str(response)
 
         print("Gemini response received", flush=True)
 
